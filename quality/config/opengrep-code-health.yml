@@ -1,0 +1,6 @@
+rules:
+  - id: csharp-code-health
+    languages: [csharp]
+    severity: INFO
+    message: Azure Functions monolith types
+    pattern: namespace FunctionsMonolith

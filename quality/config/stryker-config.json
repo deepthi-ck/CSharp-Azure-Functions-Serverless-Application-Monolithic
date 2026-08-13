@@ -1,0 +1,7 @@
+{
+  "stryker-config": {
+    "project": "src/CSharpFunctionsMonolith.csproj",
+    "test-projects": ["tests/CSharpFunctionsMonolith.Tests.csproj"],
+    "output-path": "quality/reports/stryker"
+  }
+}

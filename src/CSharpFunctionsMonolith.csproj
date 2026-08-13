@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>FunctionsMonolith</RootNamespace>
+    <AssemblyName>CSharpFunctionsMonolith</AssemblyName>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <AzureFunctionsVersion>v4</AzureFunctionsVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>CustomerVersion</_Parameter1>
+      <_Parameter2>$(CustomerVersion)</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>BranchName</_Parameter1>
+      <_Parameter2>$(BranchName)</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>AppTargetFramework</_Parameter1>
+      <_Parameter2>$(AppTargetFramework)</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>Scenario</_Parameter1>
+      <_Parameter2>$(Scenario)</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>ModuleLayout</_Parameter1>
+      <_Parameter2>$(ModuleLayout)</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="host.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="local.settings.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\config\appsettings.json" Link="config\appsettings.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\data\sample-app-data.json" Link="data\sample-app-data.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
+    <Reference Include="System.Net.Http" />
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="CSharpFunctionsMonolith.Tests" />
+  </ItemGroup>
+</Project>

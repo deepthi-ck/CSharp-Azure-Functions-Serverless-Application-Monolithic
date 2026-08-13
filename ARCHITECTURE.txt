@@ -1,0 +1,34 @@
+C# Azure Functions Serverless Application — Scenario 1 Monolithic (flat single module)
+
+USER / TEST HARNESS
+        |
+        v
+  HTTP Client (async Task)
+        |
+        v
+  Azure Functions HTTP Triggers (Get/Put/Delete/Health/Version/Stats)
+        |
+        v
+     AppService (same repo / same version)
+        |
+        v
+     AppManager
+        |
+        v
+  PartitionRouter  ->  Node 1 / Node 2 / Node 3
+        |
+        v
+  InMemoryStore (ConcurrentDictionary + Dictionary + LINQ + DateTimeOffset)
+        |
+        v
+  ReplicationManager / ExpirationManager / EvictionManager
+        |
+        v
+  HTTP / Function Response -> client
+
+Routes: GET/PUT/DELETE /api/resources/{key}, GET /api/health /api/version /api/stats
+Host: Program.cs isolated-worker bootstrap + FunctionAppHost (local test-host)
+Same Customer Version for Functions and shared service on each branch.
+Not Scenario 2. Not MAUI. Not gRPC. Not Blazor WASM.
+C# built-ins are required to run PUT/GET/DELETE/TTL/eviction/JSON load.
+Framework 4.8 branch is C#_net4.8 (MSBuild net48).

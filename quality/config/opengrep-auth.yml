@@ -1,0 +1,6 @@
+rules:
+  - id: csharp-auth-access
+    languages: [csharp]
+    severity: INFO
+    message: Health surface without access-control gate
+    pattern: GetHealthAsync

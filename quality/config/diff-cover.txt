@@ -1,0 +1,1 @@
+MiniCover Cobertura XML at quality/reports/minicover/cobertura.xml is required input for diff-cover.

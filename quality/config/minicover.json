@@ -1,0 +1,7 @@
+{
+  "workdir": ".",
+  "assemblies": ["**/CSharpFunctionsMonolith.dll"],
+  "sources": ["src/**/*.cs"],
+  "coverageFile": "quality/reports/minicover/cobertura.xml",
+  "threshold": 1
+}
