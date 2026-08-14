@@ -10,22 +10,24 @@ using System.Threading.Tasks;
 namespace FunctionsMonolith
 {
     /// <summary>
-    /// Local Azure Functions HTTP test-host: maps isolated-worker trigger routes onto Function classes.
+    /// Local Azure Functions HTTP test-host: isolated-worker API routes plus operator UI pages.
     /// </summary>
     public sealed class FunctionAppHost : IDisposable
     {
         private readonly FunctionApp _app;
         private readonly HttpListener _listener;
         private readonly JsonSerializerOptions _json;
+        private readonly string _wwwroot;
         private CancellationTokenSource _cts;
         private Task _loop;
 
-        public FunctionAppHost(FunctionApp app, string prefix)
+        public FunctionAppHost(FunctionApp app, string prefix, string wwwroot)
         {
             if (app == null) { throw new ArgumentNullException("app"); }
             if (string.IsNullOrWhiteSpace(prefix)) { throw new ArgumentException("Prefix is required.", "prefix"); }
             _app = app;
             Prefix = prefix;
+            _wwwroot = wwwroot ?? string.Empty;
             _listener = new HttpListener();
             _listener.Prefixes.Add(prefix);
             _json = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
@@ -71,22 +73,21 @@ namespace FunctionsMonolith
         {
             HttpListenerRequest request = context.Request;
             HttpListenerResponse response = context.Response;
-            string path = request.Url == null ? "/" : request.Url.AbsolutePath.TrimEnd('/');
+            string path = request.Url == null ? "/" : request.Url.AbsolutePath;
+            if (path.Length > 1) { path = path.TrimEnd('/'); }
             if (string.IsNullOrWhiteSpace(path)) { path = "/"; }
 
             try
             {
                 if (IsGet(request) && string.Equals(path, "/api/health", StringComparison.OrdinalIgnoreCase))
                 {
-                    object health = await _app.Health.RunAsync(token).ConfigureAwait(false);
-                    WriteJson(response, 200, health);
+                    WriteJson(response, 200, await _app.Health.RunAsync(token).ConfigureAwait(false));
                     return;
                 }
 
                 if (IsGet(request) && string.Equals(path, "/api/version", StringComparison.OrdinalIgnoreCase))
                 {
-                    VersionInfo version = await _app.Version.RunAsync(token).ConfigureAwait(false);
-                    WriteJson(response, 200, version);
+                    WriteJson(response, 200, await _app.Version.RunAsync(token).ConfigureAwait(false));
                     return;
                 }
 
@@ -102,9 +103,22 @@ namespace FunctionsMonolith
                         deletes = stats.Deletes,
                         replications = stats.Replications,
                         evictions = stats.Evictions,
+                        expirations = stats.Expirations,
                         entries = _app.Manager.EntryCount(),
                         nodes = _app.Manager.NodeCount()
                     });
+                    return;
+                }
+
+                if (IsGet(request) && string.Equals(path, "/api/nodes", StringComparison.OrdinalIgnoreCase))
+                {
+                    WriteJson(response, 200, await _app.Nodes.RunAsync(token).ConfigureAwait(false));
+                    return;
+                }
+
+                if (IsGet(request) && string.Equals(path, "/api/resources", StringComparison.OrdinalIgnoreCase))
+                {
+                    WriteJson(response, 200, await _app.List.RunAsync(token).ConfigureAwait(false));
                     return;
                 }
 
@@ -134,7 +148,18 @@ namespace FunctionsMonolith
                     }
                 }
 
-                WriteJson(response, 404, AppResponse.Error("route not found"));
+                if (IsGet(request) && TryServeUi(response, path))
+                {
+                    return;
+                }
+
+                if (path.StartsWith("/api/", StringComparison.OrdinalIgnoreCase))
+                {
+                    WriteJson(response, 404, AppResponse.Error("route not found"));
+                    return;
+                }
+
+                WriteHtml(response, 404, "<!DOCTYPE html><html><body><p>Page not found. Return to <a href=\"/\">Dashboard</a>.</p></body></html>");
             }
             catch (ArgumentException ex)
             {
@@ -146,11 +171,53 @@ namespace FunctionsMonolith
             }
         }
 
+        private bool TryServeUi(HttpListenerResponse response, string path)
+        {
+            if (string.IsNullOrWhiteSpace(_wwwroot) || !Directory.Exists(_wwwroot)) { return false; }
+            string relative = string.Equals(path, "/", StringComparison.Ordinal) ? "index.html" : path.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
+            string full = Path.GetFullPath(Path.Combine(_wwwroot, relative));
+            string root = Path.GetFullPath(_wwwroot);
+            if (!root.EndsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.Ordinal))
+            {
+                root = root + Path.DirectorySeparatorChar;
+            }
+            if (!full.StartsWith(root, StringComparison.OrdinalIgnoreCase) || !File.Exists(full))
+            {
+                return false;
+            }
+
+            byte[] bytes = File.ReadAllBytes(full);
+            response.StatusCode = 200;
+            response.ContentType = ContentType(full);
+            response.ContentLength64 = bytes.Length;
+            response.OutputStream.Write(bytes, 0, bytes.Length);
+            response.OutputStream.Close();
+            return true;
+        }
+
+        private static string ContentType(string full)
+        {
+            if (full.EndsWith(".css", StringComparison.OrdinalIgnoreCase)) { return "text/css; charset=utf-8"; }
+            if (full.EndsWith(".js", StringComparison.OrdinalIgnoreCase)) { return "application/javascript; charset=utf-8"; }
+            if (full.EndsWith(".svg", StringComparison.OrdinalIgnoreCase)) { return "image/svg+xml"; }
+            return "text/html; charset=utf-8";
+        }
+
         private void WriteJson(HttpListenerResponse response, int status, object payload)
         {
             byte[] bytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(payload, _json));
             response.StatusCode = status;
             response.ContentType = "application/json; charset=utf-8";
+            response.ContentLength64 = bytes.Length;
+            response.OutputStream.Write(bytes, 0, bytes.Length);
+            response.OutputStream.Close();
+        }
+
+        private static void WriteHtml(HttpListenerResponse response, int status, string html)
+        {
+            byte[] bytes = Encoding.UTF8.GetBytes(html);
+            response.StatusCode = status;
+            response.ContentType = "text/html; charset=utf-8";
             response.ContentLength64 = bytes.Length;
             response.OutputStream.Write(bytes, 0, bytes.Length);
             response.OutputStream.Close();
