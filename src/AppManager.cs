@@ -82,8 +82,48 @@ namespace FunctionsMonolith
             return deleted ? AppResponse.Success(key, null, primary.Id) : AppResponse.NotFound(key);
         }
 
-        public int EntryCount() { return _router.AllNodes().Sum(n => n.Store.Count); }
+        public int EntryCount() { return ListResources().Count; }
         public int NodeCount() { return _router.AllNodes().Count; }
+
+        public IList<object> ListResources()
+        {
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+            Dictionary<string, object> unique = new Dictionary<string, object>(StringComparer.Ordinal);
+            foreach (StoreNode node in _router.AllNodes())
+            {
+                Sweep(node.Store, now);
+                foreach (ResourceEntry entry in node.Store.Snapshot().Where(e => !e.IsExpired(now)))
+                {
+                    StoreNode primary = _router.PrimaryFor(entry.Key);
+                    if (!string.Equals(primary.Id, node.Id, StringComparison.Ordinal)) { continue; }
+                    if (unique.ContainsKey(entry.Key)) { continue; }
+                    unique[entry.Key] = new
+                    {
+                        key = entry.Key,
+                        value = entry.Value,
+                        node = primary.Id,
+                        created = entry.Created,
+                        expiration = entry.Expiration
+                    };
+                }
+            }
+            return unique.Values.ToList();
+        }
+
+        public IList<object> ListNodes()
+        {
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+            return _router.AllNodes().Select(node =>
+            {
+                Sweep(node.Store, now);
+                return (object)new
+                {
+                    id = node.Id,
+                    entries = node.Store.Count,
+                    keys = node.Keys().Where(k => node.Store.Contains(k)).ToList()
+                };
+            }).ToList();
+        }
 
         public object Health()
         {
