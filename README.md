@@ -42,9 +42,18 @@ dotnet run --project src/CSharpFunctionsMonolith.csproj
 
 HTTP routes (local test-host equivalent of Azure Functions isolated worker):
 
+- Operator UI (page-to-page): `http://127.0.0.1:5083/`
+  - `/` Dashboard
+  - `/resources.html` Resource PUT/GET/DELETE
+  - `/stats.html` Statistics
+  - `/nodes.html` Partition nodes
+  - `/health.html` Health
+  - `/version.html` Customer version
 - `GET /api/health`
 - `GET /api/version`
 - `GET /api/stats`
+- `GET /api/nodes`
+- `GET /api/resources`
 - `GET /api/resources/{key}`
 - `PUT /api/resources/{key}`
 - `DELETE /api/resources/{key}`

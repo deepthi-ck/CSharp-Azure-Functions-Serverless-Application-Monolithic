@@ -46,8 +46,9 @@ namespace FunctionsMonolith
 
             FunctionApp app = new FunctionApp(configuration, build);
             app.Service.LoadSampleData(FindFile("data", "sample-app-data.json"));
+            string wwwroot = FindDirectory("wwwroot");
 
-            using (FunctionAppHost host = new FunctionAppHost(app, prefix))
+            using (FunctionAppHost host = new FunctionAppHost(app, prefix, wwwroot))
             {
                 host.Start();
                 Console.WriteLine("C# Azure Functions Serverless Application (Scenario 1 - Monolithic)");
@@ -56,6 +57,7 @@ namespace FunctionsMonolith
                 Console.WriteLine("Customer Version: " + build.CustomerVersion);
                 Console.WriteLine("TFM: " + build.TargetFramework);
                 Console.WriteLine("Listening: " + prefix);
+                Console.WriteLine("Operator UI: " + prefix);
 
                 if (HasFlag(args, "--self-test"))
                 {
@@ -116,6 +118,26 @@ namespace FunctionsMonolith
                     return 1;
                 }
 
+                string[] pages = new[] { "/", "/resources.html", "/stats.html", "/nodes.html", "/health.html", "/version.html", "/css/app.css", "/js/app.js" };
+                foreach (string page in pages)
+                {
+                    HttpResponseMessage ui = await client.GetAsync(prefix.TrimEnd('/') + page).ConfigureAwait(false);
+                    if (!ui.IsSuccessStatusCode)
+                    {
+                        Console.Error.WriteLine("UI failed: " + page + " " + (int)ui.StatusCode);
+                        return 1;
+                    }
+                    string html = await ui.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    if (page.EndsWith(".html") || string.Equals(page, "/", StringComparison.Ordinal))
+                    {
+                        if (html.IndexOf("Azure Functions", StringComparison.Ordinal) < 0 || html.IndexOf("sidebar", StringComparison.OrdinalIgnoreCase) < 0)
+                        {
+                            Console.Error.WriteLine("UI navigation markup missing: " + page);
+                            return 1;
+                        }
+                    }
+                }
+
                 Console.WriteLine("Self-test PASS");
                 return 0;
             }
@@ -145,6 +167,22 @@ namespace FunctionsMonolith
                 if (File.Exists(candidate)) { return candidate; }
             }
             return Path.Combine(Directory.GetCurrentDirectory(), folder, name);
+        }
+
+        private static string FindDirectory(string name)
+        {
+            string[] roots = new[]
+            {
+                AppContext.BaseDirectory,
+                Directory.GetCurrentDirectory(),
+                Path.Combine(Directory.GetCurrentDirectory(), "src")
+            };
+            foreach (string root in roots)
+            {
+                string candidate = Path.Combine(root, name);
+                if (Directory.Exists(candidate)) { return candidate; }
+            }
+            return Path.Combine(AppContext.BaseDirectory, name);
         }
 
         private static bool HasFlag(string[] args, string flag)

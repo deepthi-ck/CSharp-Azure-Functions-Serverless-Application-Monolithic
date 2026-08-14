@@ -16,6 +16,7 @@ namespace FunctionsMonolith.Tests
             failures += Run("GetFunctionTest", GetFunctionTest.Run);
             failures += Run("PutFunctionTest", PutFunctionTest.Run);
             failures += Run("DeleteFunctionTest", DeleteFunctionTest.Run);
+            failures += Run("UiNavigationTest", UiNavigationTest.Run);
             failures += Run("CsharpBuiltinUsageTest", CsharpBuiltinUsageTest.Run);
 
             Console.WriteLine(failures == 0 ? "ALL TESTS PASS" : "TESTS FAILED: " + failures);

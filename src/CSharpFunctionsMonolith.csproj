@@ -31,6 +31,7 @@
   <ItemGroup>
     <None Include="host.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="local.settings.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="wwwroot\**\*" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\config\appsettings.json" Link="config\appsettings.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\data\sample-app-data.json" Link="data\sample-app-data.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
