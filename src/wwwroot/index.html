@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard · Azure Functions Serverless</title>
+  <link rel="stylesheet" href="/css/app.css" />
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="main">
+      <header class="topbar">
+        <h2 class="title">Function app dashboard</h2>
+        <div class="meta">
+          <span class="pill" id="meta-branch">Branch loading</span>
+          <span class="pill" id="meta-customer">Customer loading</span>
+          <span class="pill" id="meta-tfm"></span>
+        </div>
+      </header>
+      <main class="content">
+        <p class="lede" id="dash-app">C# Azure Functions Serverless Application — isolated worker, Scenario 1 monolithic.</p>
+        <p class="lede" id="dash-scenario"></p>
+        <section class="grid">
+          <article class="card"><p class="kpi-label">Health</p><p class="kpi status-ok" id="kpi-health">…</p></article>
+          <article class="card"><p class="kpi-label">Partition nodes</p><p class="kpi" id="kpi-nodes">…</p></article>
+          <article class="card"><p class="kpi-label">Primary entries</p><p class="kpi" id="kpi-entries">…</p></article>
+          <article class="card"><p class="kpi-label">Git branch</p><p class="kpi" id="kpi-branch">…</p></article>
+        </section>
+        <section class="card" style="margin-top:16px;">
+          <h2>In-memory catalog</h2>
+          <table>
+            <thead><tr><th>Resource key</th><th>Stored value</th><th>Primary node</th></tr></thead>
+            <tbody id="dash-inventory"></tbody>
+          </table>
+          <p class="hint">Sample keys loaded at startup: product:1001, order:2001, customer:3001. Use Resources to PUT, GET, or DELETE.</p>
+        </section>
+      </main>
+    </div>
+  </div>
+  <script src="/js/app.js"></script>
+  <script>FunctionsUi.boot("dashboard");</script>
+</body>
+</html>

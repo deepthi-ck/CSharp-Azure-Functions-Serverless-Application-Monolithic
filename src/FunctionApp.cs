@@ -20,6 +20,8 @@ namespace FunctionsMonolith
             Get = new GetFunction(Service);
             Put = new PutFunction(Service);
             Delete = new DeleteFunction(Service);
+            List = new ListFunction(Service);
+            Nodes = new NodesFunction(Service);
             Health = new HealthFunction(Service);
             Version = new VersionFunction(build);
             Stats = new StatsFunction(Service);
@@ -32,6 +34,8 @@ namespace FunctionsMonolith
         public GetFunction Get { get; private set; }
         public PutFunction Put { get; private set; }
         public DeleteFunction Delete { get; private set; }
+        public ListFunction List { get; private set; }
+        public NodesFunction Nodes { get; private set; }
         public HealthFunction Health { get; private set; }
         public VersionFunction Version { get; private set; }
         public StatsFunction Stats { get; private set; }

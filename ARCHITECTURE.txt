@@ -1,12 +1,15 @@
 C# Azure Functions Serverless Application — Scenario 1 Monolithic (flat single module)
 
-USER / TEST HARNESS
+USER / TEST HARNESS / OPERATOR UI
         |
         v
-  HTTP Client (async Task)
+  Browser pages: Dashboard, Resources, Statistics, Nodes, Health, Version
         |
         v
-  Azure Functions HTTP Triggers (Get/Put/Delete/Health/Version/Stats)
+  FunctionAppHost (HttpListener + wwwroot)
+        |
+        v
+  Azure Functions HTTP Triggers (Get/Put/Delete/List/Nodes/Health/Version/Stats)
         |
         v
      AppService (same repo / same version)
